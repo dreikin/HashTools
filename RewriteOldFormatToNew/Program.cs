@@ -42,7 +42,7 @@ namespace RewriteOldFormatToNew
                 {
                     if (oldChecksum.ChecksumAlgorithm != "SHA-512")
                     {
-                        throw new InvalidDataException("Something didn't have 'SHA-512' as the algorithm");
+                        throw new InvalidDataException("Something didn't have 'SHA-512' as the algorithm.  Actual value: " + oldChecksum);
                     }
 
                     // Get root path.  If it's not already a ChecksumCollection root, then add a new one to the dictionary.

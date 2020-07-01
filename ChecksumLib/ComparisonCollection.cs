@@ -1,39 +1,53 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace ChecksumLib
 {
     [Serializable]
     public class ComparisonItem
     {
-        public string CommonPath { get; protected set; }
-        public string HashAlgorithm { get; protected set; }
-        public Checksum Left { get; protected set; }
-        public Checksum Right { get; protected set; }
+        public string CommonPath { get; set; }
+        public string HashAlgorithm { get; set; }
+        public Checksum Left { get; set; }
+        public Checksum Right { get; set; }
 
         public ComparisonItem(string commonPath, Checksum left, Checksum right)
         {
             CommonPath = commonPath;
-            HashAlgorithm = left.HashAlgorithm;
+            if (left is null && right is null)
+            {
+                throw new InvalidDataException("Can't compare two nulls");
+            }
+            else if (left is null)
+            {
+                HashAlgorithm = right.HashAlgorithm;
+            }
+            else
+            {
+                HashAlgorithm = left.HashAlgorithm;
+            }
             Left = left;
             Right = right;
         }
+
+        internal ComparisonItem() { }
     }
 
     [Serializable]
     public class ComparisonCollection
     {
-        public RootType RootType { get; protected set; }
-        public string LeftRoot { get; protected set; }
-        public string LeftParent { get; protected set; }
-        public string RightRoot { get; protected set; }
-        public string RightParent { get; protected set; }
-        public string CommonRoot { get; protected set; }
+        public RootType RootType { get; set; }
+        public string LeftRoot { get; set; }
+        public string LeftParent { get; set; }
+        public string RightRoot { get; set; }
+        public string RightParent { get; set; }
+        public string CommonRoot { get; set; }
 
-        public List<ComparisonItem> Same { get; protected set; } = new List<ComparisonItem>();
-        public List<ComparisonItem> Different { get; protected set; } = new List<ComparisonItem>();
-        public List<ComparisonItem> LeftOrphans { get; protected set; } = new List<ComparisonItem>();
-        public List<ComparisonItem> RightOrphans { get; protected set; } = new List<ComparisonItem>();
+        public List<ComparisonItem> Same { get; set; } = new List<ComparisonItem>();
+        public List<ComparisonItem> Different { get; set; } = new List<ComparisonItem>();
+        public List<ComparisonItem> LeftOrphans { get; set; } = new List<ComparisonItem>();
+        public List<ComparisonItem> RightOrphans { get; set; } = new List<ComparisonItem>();
 
         public ComparisonCollection(RootType rootType, string leftRoot, string leftParent, string rightRoot, string rightParent, string commonRoot)
         {
@@ -44,5 +58,7 @@ namespace ChecksumLib
             RightParent = rightParent;
             CommonRoot = commonRoot;
         }
+
+        internal ComparisonCollection() { }
     }
 }

@@ -20,10 +20,10 @@ namespace ChecksumLib
     [Serializable]
     public class ChecksumCollection
     {
-        public RootType RootType { get; protected set; }
-        public string Root { get; protected set; }
-        public string RootParent { get; protected set; }
-        public List<Checksum> Checksums { get; protected set; } = new List<Checksum>();
+        public RootType RootType { get; set; }
+        public string Root { get; set; }
+        public string RootParent { get; set; }
+        public List<Checksum> Checksums { get; set; } = new List<Checksum>();
 
         public ChecksumCollection(string rootPath, RootType rootType)
         {
@@ -33,6 +33,8 @@ namespace ChecksumLib
             RootParent = Path.GetDirectoryName(fullPath);
             Root = Path.GetFileName(fullPath);
         }
+
+        internal ChecksumCollection() { }
 
         public void Add(Checksum item)
         {

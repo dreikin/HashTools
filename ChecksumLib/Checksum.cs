@@ -9,11 +9,11 @@ namespace ChecksumLib
     [Serializable]
     public class Checksum
     {
-        public string FullPath { get; }
-        public string HashAlgorithm { get; }
-        public byte[] HashBytes { get; }
+        public string FullPath { get; set; }
+        public string HashAlgorithm { get; set; }
+        public byte[] HashBytes { get; set; }
         public string HashString => BitConverter.ToString(HashBytes).Replace("-", "").ToLowerInvariant();
-        public DateTimeOffset Timestamp { get; }
+        public DateTimeOffset Timestamp { get; set; }
 
         public Checksum(string path, string algorithm, byte[] hashBytes)
         {
@@ -27,5 +27,7 @@ namespace ChecksumLib
         {
             Timestamp = timestamp;
         }
+
+        internal Checksum() { }
     }
 }

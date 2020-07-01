@@ -9,11 +9,11 @@ namespace RewriteOldFormatToNew.Formats.v1
     [Serializable]
     public class ChecksumInfo
     {
-        public string FullPath { get; }
-        public string ChecksumAlgorithm { get; }
-        public byte[] ChecksumBytes { get; }
+        public string FullPath { get; set; }
+        public string ChecksumAlgorithm { get; set; }
+        public byte[] ChecksumBytes { get; set; }
         public string Checksum => BitConverter.ToString(ChecksumBytes).Replace("-", "").ToLowerInvariant();
-        public DateTimeOffset Timestamp { get; }
+        public DateTimeOffset Timestamp { get; set; }
 
         public ChecksumInfo(string fullPath, string algorithm, byte[] checksumBytes)
         {
@@ -28,5 +28,7 @@ namespace RewriteOldFormatToNew.Formats.v1
         {
             Timestamp = timestamp;
         }
+
+        internal ChecksumInfo() { }
     }
 }

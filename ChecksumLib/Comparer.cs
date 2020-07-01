@@ -47,7 +47,7 @@ namespace ChecksumLib
                     string commonPath;
                     if (checksum.FullPath.StartsWith(Path.Join(checksumCollection.RootParent, checksumCollection.Root)))
                     {
-                        commonPath = checksum.FullPath.Remove(0, checksumCollection.RootParent.Length + 1); // Add 1 for directory separator.
+                        commonPath = checksum.FullPath.Remove(0, checksumCollection.RootParent.Length); // Add 1 for directory separator.
                     }
                     else
                     {
@@ -69,7 +69,7 @@ namespace ChecksumLib
                     string commonPath;
                     if (checksum.FullPath.StartsWith(Path.Join(checksumCollection.RootParent, checksumCollection.Root)))
                     {
-                        commonPath = checksum.FullPath.Remove(0, checksumCollection.RootParent.Length + 1); // Add 1 for directory separator.
+                        commonPath = checksum.FullPath.Remove(0, checksumCollection.RootParent.Length); // Add 1 for directory separator.
                     }
                     else
                     {
@@ -87,8 +87,8 @@ namespace ChecksumLib
                 var leftCC = leftCCDict[root];
                 var rightCC = rightCCDict[root];
 
-                var leftChecksums = leftCC.Checksums.ToDictionary(ci => ci.FullPath.Remove(0, leftCC.RootParent.Length + 1));
-                var rightChecksums = rightCC.Checksums.ToDictionary(ci => ci.FullPath.Remove(0, rightCC.RootParent.Length + 1));
+                var leftChecksums = leftCC.Checksums.ToDictionary(ci => ci.FullPath.Remove(0, leftCC.RootParent.Length));
+                var rightChecksums = rightCC.Checksums.ToDictionary(ci => ci.FullPath.Remove(0, rightCC.RootParent.Length));
 
                 // Sort orphan and shared paths.
                 var leftPaths = leftChecksums.Keys;
@@ -120,7 +120,7 @@ namespace ChecksumLib
                     var rightChecksum = rightChecksums[path];
 
                     if (leftChecksum.HashAlgorithm == rightChecksum.HashAlgorithm &&
-                        leftChecksum.HashBytes == rightChecksum.HashBytes)
+                        leftChecksum.HashBytes.SequenceEqual(rightChecksum.HashBytes))
                     {
                         cc.Same.Add(new ComparisonItem(path, leftChecksum, rightChecksum));
                     }

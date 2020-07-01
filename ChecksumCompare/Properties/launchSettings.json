@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ChecksumCompare": {
+      "commandName": "Project",
+      "commandLineArgs": "JK-New.comparison.json \".\\newformat-J-New c0e54fb5-6fc8-43a6-b66e-5ab24e679ac1.checksums.json\" \".\\newformat-K-New 15e2962c-9493-4c17-8acc-8debcd3b10b5.checksums.json\""
+    }
+  }
+}

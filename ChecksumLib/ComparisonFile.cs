@@ -9,11 +9,13 @@ namespace ChecksumLib
     {
         public string FileType => "HashTools.ChecksumLib.ComparisonFile";
         public string Version => "2.0";
-        public List<ComparisonCollection> ComparisonCollections { get; protected set; } = new List<ComparisonCollection>();
+        public List<ComparisonCollection> ComparisonCollections { get; set; } = new List<ComparisonCollection>();
 
         public ComparisonFile(List<ComparisonCollection> comparisonCollections)
         {
             ComparisonCollections = comparisonCollections;
         }
+
+        internal ComparisonFile() { }
     }
 }

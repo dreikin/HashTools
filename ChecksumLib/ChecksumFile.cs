@@ -10,8 +10,8 @@ namespace ChecksumLib
     {
         public string FileType => "HashTools.ChecksumLib.ChecksumFile";
         public string Version => "2.0";
-        public List<ChecksumCollection> ChecksumCollections { get; protected set; } = new List<ChecksumCollection>();
-        public Stats Stats { get; protected set; } = new Stats();
+        public List<ChecksumCollection> ChecksumCollections { get;  set; } = new List<ChecksumCollection>();
+        public Stats Stats { get; set; } = new Stats();
 
         public ChecksumFile() { }
         public ChecksumFile(List<ChecksumCollection> checksumCollections, Stats stats = null)

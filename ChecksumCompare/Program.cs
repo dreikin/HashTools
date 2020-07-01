@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using ChecksumLib;
 
@@ -34,17 +35,19 @@ namespace ChecksumCompare
             var outfilename = args[0];
 
             var infiles = args.TakeLast(2);
-            foreach (var arg in args)
+            foreach (var file in infiles)
             {
-                if (File.Exists(arg))
+                if (File.Exists(file))
                 {
-                    var checksumFile = Serializer.DeserializeChecksumFileFromUtf8Json(arg);
-                    checksumFile.Filename = Path.GetFullPath(arg);
+                    var checksumFile = Serializer.DeserializeChecksumFileFromUtf8Json(file);
+                    //var data = Encoding.UTF8.GetString(checksumFile.SerializeToUtf8Json());
+                    //Console.WriteLine(data);
+                    checksumFile.Filename = Path.GetFullPath(file);
                     checksumFiles.Add(checksumFile);
                 }
                 else
                 {
-                    Console.WriteLine("File does not exist: " + arg);
+                    Console.WriteLine("File does not exist: " + file);
                     Console.WriteLine("Not enough valid checksum files.  Exiting.");
                     return;
                 }
