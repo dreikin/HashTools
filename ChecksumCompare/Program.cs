@@ -1,59 +1,93 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using ChecksumLib;
 
 namespace ChecksumCompare
 {
+    //class ChecksumFile
+    //{
+    //    public string Filename;
+    //    public List<ChecksumInfoCollection> ChecksumInfoCollections;
+
+    //    public ChecksumFile(string filename, List<ChecksumInfoCollection> checksums)
+    //    {
+    //        Filename = filename;
+    //        ChecksumInfoCollections = checksums;
+    //    }
+    //}
+
     class Program
     {
         static void Main(string[] args)
         {
 
-            var csums = new Dictionary<string, List<ChecksumInfo>>();
-            if (args.Length == 0)
+            var checksumFiles = new List<ChecksumFile>();
+            if (args.Length != 3)
             {
-                Console.WriteLine("Please add at least two checksum files to the commandline.");
+                Console.WriteLine("This command requires three arguments.  The first is an output file path, and the next two are paths to checksum files.");
                 return;
             }
-            else
+
+            var outfilename = args[0];
+
+            var infiles = args.TakeLast(2);
+            foreach (var arg in args)
             {
-                foreach (var arg in args)
+                if (File.Exists(arg))
                 {
-                    if (File.Exists(arg))
-                    {
-                        csums.Add(Path.GetFullPath(arg), LoadChecksumsFile(arg));
-                    }
-                    else
-                    {
-                        Console.WriteLine("File does not exist: " + arg);
-                    }
+                    var checksumFile = Serializer.DeserializeChecksumFileFromUtf8Json(arg);
+                    checksumFile.Filename = Path.GetFullPath(arg);
+                    checksumFiles.Add(checksumFile);
+                }
+                else
+                {
+                    Console.WriteLine("File does not exist: " + arg);
+                    Console.WriteLine("Not enough valid checksum files.  Exiting.");
+                    return;
                 }
             }
 
-            var massaged = MassageChecksumsLists(csums);
-        }
+            Console.WriteLine("Comparing...");
+            var left = checksumFiles[0];
+            var right = checksumFiles[1];
+            var comparisonFile = Comparer.Compare(left, right);
 
-        private static Dictionary<string, HashSet<ChecksumInfo>> MassageChecksumsLists(Dictionary<string, List<ChecksumInfo>> csums)
-        {
-            var massaged = new Dictionary<string, HashSet<ChecksumInfo>>();
-            foreach (var item in csums)
+            var serialized = comparisonFile.SerializeToUtf8Json();
+
+            try
             {
-                IEqualityComparer<ChecksumInfo> HashComparer => {
-
-                }
-                massaged.Add(item.Key, new HashSet<ChecksumInfo>(item.Value, HashComparer));
+                using var outfile = File.Open(outfilename, FileMode.CreateNew, FileAccess.Write);
+                outfile.Write(serialized);
+                Console.WriteLine("Checksums written to: " + Path.GetFullPath(outfilename));
             }
-            throw new NotImplementedException();
-        }
+            catch (Exception)
+            {
+                Console.WriteLine("Couldn't write to file.  Writing to console instead.");
+                Console.WriteLine(serialized);
+            }
 
-        private static List<ChecksumInfo> LoadChecksumsFile(string arg)
-        {
-            //throw new NotImplementedException();
-            var jsonUtf8Bytes = File.ReadAllBytes(arg);
-            var utf8Reader = new Utf8JsonReader(jsonUtf8Bytes);
-            return JsonSerializer.Deserialize<List<ChecksumInfo>>(ref utf8Reader);
+            Console.WriteLine("Stats:");
+            Console.WriteLine($"\tLeft Orphan Roots: {comparisonFile.ComparisonCollections.Where(cc => cc.RightRoot is null).Count()}");
+            Console.WriteLine($"\tRight Orphan Roots: {comparisonFile.ComparisonCollections.Where(cc => cc.LeftRoot is null).Count()}");
+            Console.WriteLine("\tLeft Orphan Files: {0}",
+                comparisonFile.ComparisonCollections.Where(cc => !(cc.RightRoot is null || cc.LeftRoot is null))
+                .Select(cc => cc.LeftOrphans.Count)
+                .Sum());
+            Console.WriteLine("\tRight Orphan Files: {0}",
+                comparisonFile.ComparisonCollections.Where(cc => !(cc.RightRoot is null || cc.LeftRoot is null))
+                .Select(cc => cc.RightOrphans.Count)
+                .Sum());
+            Console.WriteLine("\tDifferent Files: {0}",
+                comparisonFile.ComparisonCollections.Where(cc => !(cc.RightRoot is null || cc.LeftRoot is null))
+                .Select(cc => cc.Different.Count)
+                .Sum());
+            Console.WriteLine("\tSame Files: {0}",
+                comparisonFile.ComparisonCollections.Where(cc => !(cc.RightRoot is null || cc.LeftRoot is null))
+                .Select(cc => cc.Same.Count)
+                .Sum());
         }
     }
 }

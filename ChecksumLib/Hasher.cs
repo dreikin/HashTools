@@ -9,7 +9,7 @@ namespace ChecksumLib
 {
     public class Hasher
     {
-        public static ChecksumInfo HashFile(string path, string algorithm = "SHA512")
+        public static Checksum HashFile(string path, string algorithm = "SHA512")
         {
             using var hasher = HashAlgorithm.Create(algorithm);
             if (hasher is null)
@@ -20,7 +20,7 @@ namespace ChecksumLib
             using var stream = File.OpenRead(path);
             var timestamp = DateTimeOffset.UtcNow;
             var hash = hasher.ComputeHash(stream);
-            return new ChecksumInfo(path, algorithm, hash, timestamp);
+            return new Checksum(path, algorithm, hash, timestamp);
         }
 
         public static string HashToString(byte[] hashBytes)

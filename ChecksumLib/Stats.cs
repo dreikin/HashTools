@@ -21,7 +21,7 @@ namespace ChecksumLib
     public class Stats
     {
         public StatItem ArgNotValid { get; protected set; } = new StatItem();
-        public StatItem OriginWentMissing { get; protected set; } = new StatItem();
+        public StatItem RootWentMissing { get; protected set; } = new StatItem();
         public StatItem Unauthorized { get; protected set; } = new StatItem();
         public StatItem Disappeared { get; protected set; } = new StatItem();
         public StatItem ChecksumFailure { get; protected set; } = new StatItem();

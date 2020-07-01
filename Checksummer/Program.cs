@@ -13,13 +13,14 @@ namespace Checksummer
     {
         static void Main(string[] args)
         {
-            var stats = new Stats();
+            var checksumFile = new ChecksumFile();
+            var stats = checksumFile.Stats;
 
             // Set starting locations
-            var origins = new List<string>();
+            var roots = new List<string>();
             if (args.Length == 0)
             {
-                origins.Add(Directory.GetCurrentDirectory());
+                roots.Add(Directory.GetCurrentDirectory());
             }
             else
             {
@@ -27,49 +28,49 @@ namespace Checksummer
                 {
                     if (File.Exists(arg) || Directory.Exists(arg))
                     {
-                        origins.Add(arg);
+                        roots.Add(arg);
                     }
                     else
                     {
-                        Console.WriteLine("Origin does not exist: " + arg);
+                        Console.WriteLine("Root does not exist: " + arg);
                         stats.ArgNotValid.Add(arg);
                     }
                 }
             }
 
             // Get checksums
-            var csums = new List<ChecksumInfoCollection>();
-            foreach (var origin in origins)
+            var checksumCollections = checksumFile.ChecksumCollections;
+            foreach (var root in roots)
             {
-                Console.WriteLine("Origin: " + origin);
-                if (Directory.Exists(origin))
+                Console.WriteLine("Root: " + root);
+                if (Directory.Exists(root))
                 {
-                    var csumCollection = CreateChecksumInfoCollection(origin, OriginType.Directory);
-                    var csumCollection = new ChecksumInfoCollection(Path.GetDirectoryName(Path.GetFullPath(origin)));
-                    HashTree(origin, csums, stats);
+                    var checksumCollection = new ChecksumCollection(root, RootType.Directory);
+                    HashTree(root, checksumCollection, stats);
+                    checksumCollections.Add(checksumCollection);
                 }
-                else if (File.Exists(origin))
+                else if (File.Exists(root))
                 {
-                    Console.WriteLine("Origin is a file.");
+                    Console.WriteLine("Root is a file.");
                     try
                     {
-                        var csumCollection = CreateChecksumInfoCollection(origin, OriginType.File);
-                        var csumCollection = new ChecksumInfoCollection(Path.GetDirectoryName(Path.GetFullPath(origin)));
-                        csums.Add(GetChecksumInfo(origin));
+                        var checksumCollection = new ChecksumCollection(root, RootType.File);
+                        checksumCollection.Add(Hasher.HashFile(root));
+                        checksumCollections.Add(checksumCollection);
                     }
                     catch (UnauthorizedAccessException)
                     {
-                        stats.ChecksumFailure.Add("Unauthorized: " + origin);
+                        stats.ChecksumFailure.Add("Unauthorized: " + root);
                     }
                     catch (Exception)
                     {
-                        stats.ChecksumFailure.Add("Unknown cause: " + origin);
+                        stats.ChecksumFailure.Add("Unknown cause: " + root);
                     }
                 }
                 else
                 {
-                    Console.WriteLine("Origin disappeared?");
-                    stats.OriginWentMissing.Add(origin);
+                    Console.WriteLine("Root disappeared?");
+                    stats.RootWentMissing.Add(root);
                 }
             }
 
@@ -80,8 +81,8 @@ namespace Checksummer
             {
                 Console.WriteLine($"\t\t{item}");
             }
-            Console.WriteLine($"\tOrigins that disappeared: {stats.OriginWentMissing.Count}");
-            foreach (var item in stats.OriginWentMissing.Items)
+            Console.WriteLine($"\tRoots that disappeared: {stats.RootWentMissing.Count}");
+            foreach (var item in stats.RootWentMissing.Items)
             {
                 Console.WriteLine($"\t\t{item}");
             }
@@ -100,26 +101,22 @@ namespace Checksummer
             {
                 Console.WriteLine($"\t\t{item}");
             }
-            Console.WriteLine($"Total files checksummed: {csums.Count}");
+            Console.WriteLine($"Total files checksummed: {checksumCollections.Select(ci => ci.Checksums.Count).Sum()}");
 
             // Serialize data
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-            };
-            var serialized = JsonSerializer.SerializeToUtf8Bytes(csums, options);
+            var serialized = checksumFile.SerializeToUtf8Json();
 
             // Save to file with random name.
             do
             {
-                var outfilename = string.Format(@"{0}.checksums", Guid.NewGuid());
+                var outfilename = string.Format(@"{0}.checksums.json", Guid.NewGuid());
                 //outfilename = string.Format(@"{0}.checksums", Path.GetRandomFileName());
 
                 try
                 {
                     using var outfile = File.Open(outfilename, FileMode.CreateNew, FileAccess.Write);
                     outfile.Write(serialized);
-                    Console.WriteLine("Checksums written to: " + Path.GetFullPath(outfilename));
+                    Console.WriteLine("ChecksumFile written to: " + Path.GetFullPath(outfilename));
                     break;
                 }
                 catch (IOException)
@@ -129,34 +126,18 @@ namespace Checksummer
             } while (true);
         }
 
-        private static ChecksumInfoCollection CreateChecksumInfoCollection(string origin, OriginType type)
-        {
-            string path;
-            switch (type)
-            {
-                case OriginType.Directory:
-
-                    break;
-                case OriginType.File:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException($"{type} is not a valid OriginType.");
-            }
-            return new ChecksumInfoCollection(path);
-        }
-
-        private static void HashTree(string origin, List<ChecksumInfo> csums, Stats stats)
+        private static void HashTree(string root, ChecksumCollection checksumCollection, Stats stats)
         {
             // List all files
             IEnumerable<string> files = null;
             try
             {
-                files = Directory.EnumerateFiles(origin);
+                files = Directory.EnumerateFiles(root);
             }
             catch (UnauthorizedAccessException)
             {
-                Console.WriteLine("Can't enumerate files in: " + origin);
-                stats.Unauthorized.Add("Can't enumerate files in: " + origin);
+                Console.WriteLine("Can't enumerate files in: " + root);
+                stats.Unauthorized.Add("Can't enumerate files in: " + root);
             }
 
             if (files is { }) //not-null test using property matching.  I really just want "is not null" to be a thing.
@@ -166,7 +147,7 @@ namespace Checksummer
                     Console.WriteLine("File: " + file);
                     try
                     {
-                        csums.Add(GetChecksumInfo(file));
+                        checksumCollection.Add(Hasher.HashFile(file));
                     }
                     catch (UnauthorizedAccessException)
                     {
@@ -180,33 +161,25 @@ namespace Checksummer
             }
 
             // List all directories
+            IEnumerable<string> directories = null;
             try
             {
-                var directories = Directory.EnumerateDirectories(origin);
-
-                foreach (var directory in directories)
-                {
-                    Console.WriteLine("Directory: " + directory);
-                    HashTree(directory, csums, stats);
-                }
+                directories = Directory.EnumerateDirectories(root);
             }
             catch (UnauthorizedAccessException)
             {
-                Console.WriteLine("Can't enumerate directories in: " + origin);
-                stats.Unauthorized.Add("Can't enumerate directories in: " + origin);
+                Console.WriteLine("Can't enumerate directories in: " + root);
+                stats.Unauthorized.Add("Can't enumerate directories in: " + root);
+            }
+
+            if (directories is { }) //not-null test using property matching.  I really just want "is not null" to be a thing.
+            {
+                foreach (var directory in directories)
+                {
+                    Console.WriteLine("Directory: " + directory);
+                    HashTree(directory, checksumCollection, stats);
+                }
             }
         }
-
-        public static ChecksumInfo GetChecksumInfo(string filename)
-        {
-            var algorithm = "SHA-512";
-            return new ChecksumInfo(Path.GetFullPath(filename), algorithm, HashFile(algorithm, filename));
-        }
-    }
-
-    enum OriginType
-    {
-        Directory,
-        File
     }
 }
