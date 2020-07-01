@@ -4,6 +4,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ChecksumLib
 {
@@ -15,6 +16,7 @@ namespace ChecksumLib
             {
                 WriteIndented = true,
             };
+            options.Converters.Add(new JsonStringEnumConverter());
             return JsonSerializer.SerializeToUtf8Bytes(checksumFile, options);
         }
 
@@ -27,7 +29,9 @@ namespace ChecksumLib
         public static ChecksumFile DeserializeChecksumFileFromUtf8Json(byte[] jsonUtf8Bytes)
         {
             var utf8Reader = new Utf8JsonReader(jsonUtf8Bytes);
-            return JsonSerializer.Deserialize<ChecksumFile>(ref utf8Reader);
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+            return JsonSerializer.Deserialize<ChecksumFile>(ref utf8Reader, options);
         }
 
         public static byte[] SerializeToUtf8Json(this ComparisonFile comparisonFile)
@@ -36,6 +40,7 @@ namespace ChecksumLib
             {
                 WriteIndented = true,
             };
+            options.Converters.Add(new JsonStringEnumConverter());
             return JsonSerializer.SerializeToUtf8Bytes(comparisonFile, options);
         }
 
@@ -48,7 +53,9 @@ namespace ChecksumLib
         public static ComparisonFile DeserializeComparisonFileFromUtf8Json(byte[] jsonUtf8Bytes)
         {
             var utf8Reader = new Utf8JsonReader(jsonUtf8Bytes);
-            return JsonSerializer.Deserialize<ComparisonFile>(ref utf8Reader);
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+            return JsonSerializer.Deserialize<ComparisonFile>(ref utf8Reader, options);
         }
 
         private static byte[] SerializeToUtf8Json(this List<ChecksumCollection> checksums)
@@ -57,6 +64,7 @@ namespace ChecksumLib
             {
                 WriteIndented = true,
             };
+            options.Converters.Add(new JsonStringEnumConverter());
             return JsonSerializer.SerializeToUtf8Bytes(checksums, options);
         }
 
@@ -69,7 +77,9 @@ namespace ChecksumLib
         private static List<ChecksumCollection> DeserializeChecksumsFromUtf8Json(byte[] jsonUtf8Bytes)
         {
             var utf8Reader = new Utf8JsonReader(jsonUtf8Bytes);
-            return JsonSerializer.Deserialize<List<ChecksumCollection>>(ref utf8Reader);
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+            return JsonSerializer.Deserialize<List<ChecksumCollection>>(ref utf8Reader, options);
         }
 
         private static byte[] SerializeToUtf8Json(this List<ComparisonCollection> comparisons)
@@ -78,6 +88,7 @@ namespace ChecksumLib
             {
                 WriteIndented = true,
             };
+            options.Converters.Add(new JsonStringEnumConverter());
             return JsonSerializer.SerializeToUtf8Bytes(comparisons, options);
         }
 
@@ -90,7 +101,9 @@ namespace ChecksumLib
         private static List<ComparisonCollection> DeserializeComparisonsFromUtf8Json(byte[] jsonUtf8Bytes)
         {
             var utf8Reader = new Utf8JsonReader(jsonUtf8Bytes);
-            return JsonSerializer.Deserialize<List<ComparisonCollection>>(ref utf8Reader);
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+            return JsonSerializer.Deserialize<List<ComparisonCollection>>(ref utf8Reader, options);
         }
     }
 }

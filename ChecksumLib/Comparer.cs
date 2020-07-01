@@ -42,7 +42,7 @@ namespace ChecksumLib
             {
                 var checksumCollection = leftCCDict[root];
                 var comparisonCollection = new ComparisonCollection(checksumCollection.RootType, checksumCollection.Root, checksumCollection.RootParent, null, null, root);
-                foreach (var checksum in checksumCollection)
+                foreach (var checksum in checksumCollection.Checksums)
                 {
                     string commonPath;
                     if (checksum.FullPath.StartsWith(Path.Join(checksumCollection.RootParent, checksumCollection.Root)))
@@ -64,7 +64,7 @@ namespace ChecksumLib
             {
                 var checksumCollection = rightCCDict[root];
                 var comparisonCollection = new ComparisonCollection(checksumCollection.RootType, null, null, checksumCollection.Root, checksumCollection.RootParent, root);
-                foreach (var checksum in checksumCollection)
+                foreach (var checksum in checksumCollection.Checksums)
                 {
                     string commonPath;
                     if (checksum.FullPath.StartsWith(Path.Join(checksumCollection.RootParent, checksumCollection.Root)))
@@ -87,8 +87,8 @@ namespace ChecksumLib
                 var leftCC = leftCCDict[root];
                 var rightCC = rightCCDict[root];
 
-                var leftChecksums = leftCC.ToDictionary(ci => ci.FullPath.Remove(0, leftCC.RootParent.Length + 1));
-                var rightChecksums = rightCC.ToDictionary(ci => ci.FullPath.Remove(0, rightCC.RootParent.Length + 1));
+                var leftChecksums = leftCC.Checksums.ToDictionary(ci => ci.FullPath.Remove(0, leftCC.RootParent.Length + 1));
+                var rightChecksums = rightCC.Checksums.ToDictionary(ci => ci.FullPath.Remove(0, rightCC.RootParent.Length + 1));
 
                 // Sort orphan and shared paths.
                 var leftPaths = leftChecksums.Keys;
